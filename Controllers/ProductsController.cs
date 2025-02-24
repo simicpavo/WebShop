@@ -1,170 +1,151 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using WebShop.Data;
 using WebShop.Models;
+using WebShop.Services;
 
-namespace WebShop.Controllers
+namespace WebShop.Controllers;
+
+public class ProductsController : Controller
 {
-    public class ProductsController : Controller
+    private readonly IProductService _productService;
+    private readonly ICategoryService _categoryService;
+    private readonly IDiscountService _discountService;
+
+    public ProductsController(
+        IProductService productService,
+        ICategoryService categoryService,
+        IDiscountService discountService
+    )
     {
-        private readonly ApplicationDbContext _context;
+        _productService = productService;
+        _categoryService = categoryService;
+        _discountService = discountService;
+    }
 
-        public ProductsController(ApplicationDbContext context)
+    [Authorize(Roles = "Admin")]
+    // GET: Products
+    public async Task<IActionResult> Index()
+    {
+        var products = await _productService.GetAllProductsAsync();
+        return View(products);
+    }
+
+    public async Task<IActionResult> AllProducts()
+    {
+        var products = await _productService.GetAllProductsAsync();
+        return View(products);
+    }
+
+    // GET: Products/Details/5
+    public async Task<IActionResult> Details(int id)
+    {
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null)
         {
-            _context = context;
+            return NotFound();
         }
+        return View(product);
+    }
 
-        // GET: Products
-        public async Task<IActionResult> Index()
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Create()
+    {
+        // Dohvati kategorije i popuste
+        var categories = await _categoryService.GetAllCategoriesAsync();
+        var discounts = await _discountService.GetAllDiscountsAsync();
+
+        // Dodaj kategorije i popuste u ViewBag
+        ViewBag.Categories = new SelectList(categories, "Id", "Name");
+        ViewBag.Discounts = new SelectList(discounts, "Id", "Name");
+
+        return View();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(Product product)
+    {
+        if (!ModelState.IsValid)
         {
-            var applicationDbContext = _context.Products.Include(p => p.Category).Include(p => p.Discount);
-            return View(await applicationDbContext.ToListAsync());
-        }
+            
+            // Ponovno popuni ViewBag
+            var categories = await _categoryService.GetAllCategoriesAsync();
+            var discounts = await _discountService.GetAllDiscountsAsync();
 
-        // GET: Products/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Discount)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (product == null)
-            {
-                return NotFound();
-            }
+            ViewBag.Categories = new SelectList(categories, "Id", "Name");
+            ViewBag.Discounts = new SelectList(discounts, "Id", "Name");
 
             return View(product);
         }
 
-        // GET: Products/Create
-        public IActionResult Create()
+        await _productService.CreateProductAsync(product);
+        return RedirectToAction("Index");
+    }
+
+    [Authorize(Roles = "Admin")]
+    // GET: Products/Edit/5
+    public async Task<IActionResult> Edit(int id)
+    {
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null)
         {
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id");
-            ViewData["DiscountId"] = new SelectList(_context.Discounts, "Id", "Id");
-            return View();
+            return NotFound();
         }
 
-        // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Price,CategoryId,DiscountId")] Product product)
-        {
-            if (ModelState.IsValid)
+        ViewBag.Categories = (await _categoryService.GetAllCategoriesAsync())
+            .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+            .ToList();
+
+        ViewBag.Discounts = (await _discountService.GetAllDiscountsAsync())
+            .Select(d => new SelectListItem
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", product.CategoryId);
-            ViewData["DiscountId"] = new SelectList(_context.Discounts, "Id", "Id", product.DiscountId);
-            return View(product);
+                Value = d.Id.ToString(),
+                Text = $"{d.Name} ({d.Percentage}%)",
+            })
+            .ToList();
+
+        return View(product);
+    }
+
+    [Authorize(Roles = "Admin")]
+    // POST: Products/Edit/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, Product product)
+    {
+        if (id != product.Id)
+        {
+            return NotFound();
         }
 
-        // GET: Products/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        if (ModelState.IsValid)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", product.CategoryId);
-            ViewData["DiscountId"] = new SelectList(_context.Discounts, "Id", "Id", product.DiscountId);
-            return View(product);
-        }
-
-        // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Price,CategoryId,DiscountId")] Product product)
-        {
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ProductExists(product.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Id", product.CategoryId);
-            ViewData["DiscountId"] = new SelectList(_context.Discounts, "Id", "Id", product.DiscountId);
-            return View(product);
-        }
-
-        // GET: Products/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var product = await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Discount)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            return View(product);
-        }
-
-        // POST: Products/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var product = await _context.Products.FindAsync(id);
-            if (product != null)
-            {
-                _context.Products.Remove(product);
-            }
-
-            await _context.SaveChangesAsync();
+            await _productService.UpdateProductAsync(product);
             return RedirectToAction(nameof(Index));
         }
+        return View(product);
+    }
 
-        private bool ProductExists(int id)
+    [Authorize(Roles = "Admin")]
+    // GET: Products/Delete/5
+    public async Task<IActionResult> Delete(int id)
+    {
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null)
         {
-            return _context.Products.Any(e => e.Id == id);
+            return NotFound();
         }
+        return View(product);
+    }
+
+    [Authorize(Roles = "Admin")]
+    // POST: Products/Delete/5
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        await _productService.DeleteProductAsync(id);
+        return RedirectToAction(nameof(Index));
     }
 }
