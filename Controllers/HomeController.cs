@@ -1,31 +1,30 @@
-using System.Diagnostics;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using WebShop.Models;
-
-namespace WebShop.Controllers;
+using WebShop.Services;
 
 public class HomeController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly IProductService _productService;
+    private readonly ICategoryService _categoryService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(IProductService productService, ICategoryService categoryService)
     {
-        _logger = logger;
+        _productService = productService;
+        _categoryService = categoryService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
-    }
+        var categories = await _categoryService.GetAllCategoriesAsync();
+        var discountedProducts = await _productService.GetDiscountedProductsAsync();
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        var model = new HomeView
+        {
+            Categories = categories.ToList(),
+            DiscountedProducts = discountedProducts.ToList(),
+        };
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View(model);
     }
 }
