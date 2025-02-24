@@ -1,8 +1,53 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model HomeView
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@{
+    ViewData["Title"] = "Početna";
+}
+<link rel="stylesheet" href="~/css/style.css" />
+
+<div class="container mt-5">
+    <!-- Dobrodošli naslov -->
+    <div class="text-center mb-5">
+        <h1 class="display-4">Dobrodošli u WebShop</h1>
+        <p class="lead">Pronađite najbolje proizvode po odličnim cijenama!</p>
+    </div>
+
+    <!-- Proizvodi na popustu -->
+    <section class="mb-5">
+        <h2 class="text-primary">Proizvodi na popustu</h2>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach (var product in Model.DiscountedProducts)
+            {
+                <div class="col">
+                    <partial name="_ProductCard" model="product" />
+                </div>
+            }
+        </div>
+    </section>
+
+    <!-- Proizvodi po kategorijama -->
+    <section>
+        <h2 class="text-primary">Proizvodi po kategorijama</h2>
+        @foreach (var category in Model.Categories)
+        {
+            <div class="mb-4">
+                <h3 class="text-secondary">@category.Name</h3>
+                <div class="row row-cols-1 row-cols-md-3 g-4">
+                    @if (category.Products != null && category.Products.Any())
+                    {
+                        @foreach (var product in category.Products)
+                        {
+                            <div class="col">
+                                <partial name="_ProductCard" model="product" />
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">Trenutno nema proizvoda u ovoj kategoriji.</p>
+                    }
+                </div>
+            </div>
+        }
+    </section>
 </div>
