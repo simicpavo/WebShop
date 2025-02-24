@@ -6,7 +6,7 @@ namespace WebShop.Services;
 
 public interface ICategoryService
 {
-    Task<IEnumerable<Category>> GetAllCategoriesAsync();
+    Task<List<Category>> GetAllCategoriesAsync();
     Task<Category> GetCategoryByIdAsync(int id);
     Task CreateCategoryAsync(Category category);
     Task UpdateCategoryAsync(Category category);

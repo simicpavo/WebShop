@@ -10,4 +10,5 @@ public interface IProductService
     Task CreateProductAsync(Product product);
     Task UpdateProductAsync(Product product);
     Task DeleteProductAsync(int id);
+    Task<List<Product>> GetDiscountedProductsAsync();
 }

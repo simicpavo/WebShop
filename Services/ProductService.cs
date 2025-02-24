@@ -52,4 +52,14 @@ public class ProductService : IProductService
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<List<Product>> GetDiscountedProductsAsync()
+    {
+        return await _context
+            .Products.Include(p => p.Category)
+            .Include(p => p.Discount)
+            .Where(p => p.Discount != null && p.Discount.Percentage > 0) 
+            .OrderByDescending(p => p.Discount.Percentage) 
+            .ToListAsync();
+    }
 }
