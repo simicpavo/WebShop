@@ -1,15 +1,41 @@
 @model Product
 
-<div class="card" style="width: 18rem;">
+@{
+    var hasDiscount = Model.Discount != null;
+    var discountedPrice = hasDiscount ? Model.Price * (1 - Model.Discount.Percentage / 100) : Model.Price;
+}
+
+<div class="card shadow-sm" style="width: 18rem;">
     @if (!string.IsNullOrEmpty(Model.ImagePath))
     {
         <img src="~/@Model.ImagePath" class="card-img-top" alt="@Model.Name">
     }
     <div class="card-body">
-        <h5 class="card-title">@Model.Name</h5>
-        <p class="card-text">Cijena: @Model.Price €</p>
-        <p class="card-text">Kategorija: @Model.Category?.Name</p>
-        <p class="card-text">Popust: @Model.Discount?.Percentage%</p>
+        <h5 class="card-title fw-bold">@Model.Name</h5>
+
+        @if (hasDiscount)
+        {
+            <p class="card-text text-muted">
+                Stara cijena: <del>@Model.Price.ToString("0.00")€</del>
+            </p>
+            <p class="card-text text-danger fw-bold">
+                Nova cijena: @discountedPrice.ToString("0.00")€
+            </p>
+            <p class="card-text text-success">
+                Popust: -@Model.Discount.Percentage%
+            </p>
+        }
+        else
+        {
+            <p class="card-text fw-bold">
+                Cijena: @Model.Price.ToString("0.00")€
+            </p>
+        }
+
+        <p class="card-text text-muted">
+            Kategorija: <span class="fw-bold">@Model.Category?.Name</span>
+        </p>
+
         <a href="@Url.Action("Details", "Products", new { id = Model.Id })" class="btn btn-primary">Detalji</a>
     </div>
 </div>
