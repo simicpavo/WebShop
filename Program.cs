@@ -14,7 +14,11 @@ var connectionString =
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString)
 );
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+}
 
 builder
     .Services.AddDefaultIdentity<IdentityUser>(options =>
@@ -27,6 +31,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IDiscountService, DiscountService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 var app = builder.Build();
 
@@ -39,6 +44,8 @@ else
 {
     app.UseExceptionHandler("/Home/Error");
 }
+app.UseStaticFiles();
+
 app.UseRouting();
 
 app.UseAuthentication();
