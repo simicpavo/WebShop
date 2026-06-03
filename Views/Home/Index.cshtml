@@ -5,6 +5,13 @@
 }
 <link rel="stylesheet" href="~/css/style.css" />
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
 <div class="container mt-5">
     <!-- Dobrodošli naslov -->
     <div class="text-center mb-5">
