@@ -1,0 +1,74 @@
+@model WebShop.ViewModels.CartViewModel
+
+@{
+    ViewData["Title"] = "Kosarica";
+}
+
+<h2>Košarica</h2>
+
+@if (Model == null || !Model.Items.Any())
+{
+    <p>Vasa košarica je prazna.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Proizvod</th>
+                <th>Kolicina</th>
+                <th>Cijena</th>
+                <th>Ukupno</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @{
+            var totalAmount = 0m;
+        }
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td>@item.ProductName</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <form asp-controller="CartItems" asp-action="DecreaseQuantity" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartItemId" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">-</button>
+                        </form>
+                        <span>@item.Quantity</span>
+                        <form asp-controller="CartItems" asp-action="IncreaseQuantity" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="cartItemId" value="@item.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">+</button>
+                        </form>
+                    </div>
+                </td>
+                <td>@string.Format("{0:0.00}€", item.UnitPrice)</td>
+                <td>@string.Format("{0:0.00}€", item.LineTotal)</td>
+                <td>
+                    <form asp-controller="CartItems" asp-action="RemoveFromCart" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="cartItemId" value="@item.Id" />
+                        <div class=" d-flex justify-content-end">
+                            <button type="submit" class="btn btn-sm btn-danger">Ukloni</button>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end fw-bold">Ukupan iznos:</td>
+                <td class="fw-bold">@string.Format("{0:0.00}€", Model.TotalAmount)</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="d-flex justify-content-end">
+        <a asp-action="Checkout" class="btn btn-success">Završi kupovinu</a>
+    </div>
+}

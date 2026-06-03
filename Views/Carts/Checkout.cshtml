@@ -1,0 +1,49 @@
+@model WebShop.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Placanje";
+}
+
+<h2>Plaćanje</h2>
+
+<form asp-action="Checkout" method="post" class="mt-3">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="FirstName" class="form-label"></label>
+        <input asp-for="FirstName" class="form-control" />
+        <span asp-validation-for="FirstName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="LastName" class="form-label"></label>
+        <input asp-for="LastName" class="form-control" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CardNumber" class="form-label"></label>
+        <input asp-for="CardNumber" class="form-control" />
+        <span asp-validation-for="CardNumber" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Expiry" class="form-label"></label>
+        <input asp-for="Expiry" class="form-control" placeholder="MM/GG" />
+        <span asp-validation-for="Expiry" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Cvc" class="form-label"></label>
+        <input asp-for="Cvc" class="form-control" />
+        <span asp-validation-for="Cvc" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Plati</button>
+    <a asp-action="MyCart" class="btn btn-secondary">Odustani</a>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
