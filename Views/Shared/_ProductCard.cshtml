@@ -3,12 +3,13 @@
 @{
     var hasDiscount = Model.Discount != null;
     var discountedPrice = hasDiscount ? Model.Price * (1 - Model.Discount.Percentage / 100) : Model.Price;
+    var imageFileName = Model.ImagePath;
 }
 
 <div class="card shadow-sm" style="width: 18rem;">
-    @if (!string.IsNullOrEmpty(Model.ImagePath))
+    @if (!string.IsNullOrEmpty(imageFileName))
     {
-        <img src="~/@Model.ImagePath" class="card-img-top" alt="@Model.Name">
+        <img src="~/images/@imageFileName" class="card-img-top" alt="@Model.Name">
     }
     <div class="card-body">
         <h5 class="card-title fw-bold">@Model.Name</h5>
@@ -36,6 +37,14 @@
             Kategorija: <span class="fw-bold">@Model.Category?.Name</span>
         </p>
 
-        <a href="@Url.Action("Details", "Products", new { id = Model.Id })" class="btn btn-primary">Detalji</a>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Details", "Products", new { id = Model.Id })" class="btn btn-primary">Detalji</a>
+            <form asp-controller="CartItems" asp-action="AddToCart" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                <button type="submit" class="btn btn-success">Dodaj u košaricu</button>
+            </form>
+        </div>
     </div>
 </div>
